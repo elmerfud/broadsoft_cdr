@@ -80,7 +80,7 @@ function find_archive_needing_import($dir,$_config)
     return $return;
 }
 
-function import_cdr($file,$_config)
+function import_cdr($file,$_config,$record = true)
 {
     $version = null;
     $encoding = null;
@@ -113,7 +113,9 @@ function import_cdr($file,$_config)
     fclose($fh);
     $mdb->cdr->ensureIndex(array('normalized_calledNumber' => 1), array('sparse' => true, 'background' => true));
     $mdb->cdr->ensureIndex(array('normalized_calledNumber' => 1, 'startTime' => 1), array('sparse' => true, 'background' => true));
-    $r = record_imported($file,$l_n,$_config);
+    if ($record === true) {
+        $r = record_imported($file,$l_n,$_config);
+    }
 
     logger("Processed {$l_n} lines from {$file}",null,$_config['debug']);
     return true;

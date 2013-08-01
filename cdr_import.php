@@ -55,6 +55,11 @@ while(false !== ($bs_dir = $cdr_path->read())) {
         foreach ($archives as $archive) {
             if (in_array(substr($archive,0,-3),$not_archives) === true) {
                 logger("Cleaning up archive " . substr($archive,0,-3),null,$debug);
+                if (is_writeable("{$_config['cdr']['path']}/{$bs_dir}/archive/" . substr($archive,0,-3)) === true) {
+                    unlink("{$_config['cdr']['path']}/{$bs_dir}/archive/" . substr($archive,0,-3));
+                } else {
+                    logger("Cannot remove {$_config['cdr']['path']}/{$bs_dir}/archive/" . substr($archive,0,-3),null,$debug);
+                } 
             }
         }
     } else {
@@ -62,7 +67,7 @@ while(false !== ($bs_dir = $cdr_path->read())) {
     }
 
     // Cleanup active files
-    if (is_file("{$_config['cdr']['path']}/{$bs_dir}/AcctBWCDRFileSequenceNumber.value") === true) {
+    if (is_dir("{$_config['cdr']['path']}/{$bs_dir}/active") === true) {
         $active_path = dir("{$_config['cdr']['path']}/{$bs_dir}/active");
         while(false !== ($cdr_file = $active_path->read())) {
             if (($cdr_file == '.')||($cdr_file == '..')) {
@@ -71,9 +76,11 @@ while(false !== ($bs_dir = $cdr_path->read())) {
             $seq = substr(end(explode('-',$cdr_file)),0,-4);
             if (isset($merged_list[$seq]) === true) {
                 logger("Cleaning up active {$cdr_file}",null,$debug);
-            }
-            if (in_array($cdr_file,$merged_list) === true) {
-                logger("Cleaning up active {$cdr_file}",null,$debug);
+                if (is_writeable("{$_config['cdr']['path']}/{$bs_dir}/active/{$cdr_file}") === true) {
+                    unlink("{$_config['cdr']['path']}/{$bs_dir}/active/{$cdr_file}");
+                } else {
+                    logger("Cannot remove {$_config['cdr']['path']}/{$bs_dir}/active/{$cdr_file}",null,$debug);
+                }
             }
         }
     }
@@ -90,12 +97,24 @@ while(false !== ($entry = $cdr_path->read())) {
     if (($entry == '.')||($entry == '..')) {
         continue;
     }
-    echo $entry . "\n";
+    logger("Processing archives under {$entry}",null,$debug);
     $import = find_archive_needing_import("{$_config['cdr']['path']}/{$entry}",$_config);
     foreach ($import as $file_name) {
         import_cdr("{$file_name}",$_config);
     }
-    //var_dump($import);
+
+    logger("Processing active under {$entry}",null,$debug);
+    $active_path = dir("{$_config['cdr']['path']}/{$entry}/active");
+    while(false !== ($active_entry = $active_path->read())) {
+        if (($active_entry == '.')||($active_entry == '..')) {
+            continue;
+        }
+        if (substr($active_entry,-4) == '.csv') {
+            import_cdr("{$_config['cdr']['path']}/{$entry}/active/{$active_entry}",$_config,false);
+        }
+    }
 }
+
+
 
 ?>
