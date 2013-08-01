@@ -1,0 +1,15 @@
+<?php
+
+$_config['cdr']['path'] = '/archive/broadsoft/billing'; 
+
+$_config['mongo']['connect'] = "mongodb://host1,host2,host3";
+$_config['mongo']['options'] = array('replicaset' => 'repl1', "readPreference" => MongoClient::RP_SECONDARY_PREFERRED);
+$_config['mongo']['database'] = 'broadsoft_cdr';
+
+
+$_config['cdr_fields']['v18']['names'] = file('v18_cdr_csv');
+$_config['cdr_fields']['v18']['count'] = 336;
+
+$_config['debug'] = 'stdout'; // either null or 'stdout'
+
+?>
